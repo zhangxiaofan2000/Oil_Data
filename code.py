@@ -1,34 +1,36 @@
+import time
+
 from selenium import webdriver
 import pandas as pd
 
-# 设置 Chrome driver 路径
-chromedriver_path = './chromedriver.exe'
+# 用Selenium打开网页
+driver = webdriver.Chrome(executable_path="./chromedriver.exe")
+url = 'https://data.eastmoney.com/cjsj/yjtz/default.html'
+driver.get(url)
 
-# 创建 Chrome driver
-driver = webdriver.Chrome(chromedriver_path)
 
-# 打开网页
-driver.get('https://data.eastmoney.com/cjsj/yjtz/default.html')
-
-# 等待表格加载完成
-driver.implicitly_wait(10)
-
-# 找到油价表格
-table = driver.find_element_by_id('cjsj_table')
-
-# 获取表格中的数据
+# 爬取数据
+columns = ['调整日期', '品种', '价格(元/吨)', '涨跌', '品种', '价格(元/吨)', '涨跌']
 data = []
-rows = table.find_elements_by_tag_name('tr')
-for row in rows:
-    cols = row.find_elements_by_tag_name('td')
-    cols_data = []
-    for col in cols:
-        cols_data.append(col.text)
-    data.append(cols_data)
+for page in range(1, 6):  # 爬取前5页
+    # 搜索页面中的表格元素
+    table = driver.find_element_by_xpath('//div[@id="cjsj_table"]/table')
+    rows = table.find_elements_by_tag_name('tr')
 
-# 关闭浏览器
-driver.quit()
+    for row in rows:
+        # 在每次迭代中重新搜索行中的所有列元素
+        cols = row.find_elements_by_tag_name('td')
+        cols = [col.text for col in cols]
+        data.append(cols)
 
-# 将数据保存到 Excel 文件
-df = pd.DataFrame(data[1:], columns=data[0])
-df.to_excel('oil_prices.xlsx', index=False)
+    # 点击下一页按钮
+    next_page_btn = driver.find_element_by_xpath(
+        '//div[@id="cjsj_table_pager"]/div[@class="pagerbox"]/a[text()="下一页"]')
+    next_page_btn.click()
+
+    # 等待新页面加载
+    time.sleep(2)
+
+# 将数据保存到Excel中
+df = pd.DataFrame(data)
+df.to_excel('oil_price.xlsx', index=False, header=columns)
