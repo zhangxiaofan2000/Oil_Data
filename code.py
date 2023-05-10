@@ -12,7 +12,7 @@ driver.get(url)
 # 爬取数据
 columns = ['调整日期', '品种', '价格(元/吨)', '涨跌', '品种', '价格(元/吨)', '涨跌']
 data = []
-for page in range(1, 6):  # 爬取前5页
+for page in range(1, 10):  # 爬取前5页
     # 搜索页面中的表格元素
     table = driver.find_element_by_xpath('//div[@id="cjsj_table"]/table')
     rows = table.find_elements_by_tag_name('tr')
@@ -29,7 +29,7 @@ for page in range(1, 6):  # 爬取前5页
     next_page_btn.click()
 
     # 等待新页面加载
-    time.sleep(2)
+    time.sleep(1)
 
 # 将数据保存到Excel中
 df = pd.DataFrame(data)
